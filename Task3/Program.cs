@@ -1,6 +1,7 @@
 ﻿using SHA3.Net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -37,12 +38,53 @@ namespace Task3
                 }
             }
             Generator generator = new Generator();
-            WinTableGenerator winTableGenerator = new WinTableGenerator();
-            Rules rules = new Rules();
+            WinResolver winResolver = new WinResolver();
+            Rules rules = new Rules(args);
             HelpTableGenerator helpTableGenerator = new HelpTableGenerator();
             string key = generator.Generate().Replace("-", "");
-            string HMAC = generator.GenerateHMAC(key,"hello");
-            Console.WriteLine("HMAC: " + HMAC);
+            string hmac;
+            int computerChoice = new Random().Next(0, args.Length);
+            int choice = -1;
+            hmac = generator.GenerateHMAC(key, args[computerChoice]);
+            Console.WriteLine("HMAC: " + hmac);
+            Console.WriteLine(args[computerChoice]);
+            while (choice != 0)
+            {
+                Console.WriteLine("Available moves:");
+                for (int i = 0; i < args.Length; i++)
+                {
+                    Console.WriteLine(i + 1 + " - " + args[i]);
+                }
+                Console.WriteLine(0 + " - exit");
+                Console.WriteLine("? - help");;
+                Console.Write("Enter your move: ");
+                string buff = Console.ReadLine();
+                bool result = int.TryParse(buff, out choice);
+                if (result)
+                {
+                    if (choice < 0 || choice > args.Length)
+                        Console.WriteLine("Wrong move. Select one of the items from the menu");
+                    else if(choice != 0)
+                    {
+                        Console.WriteLine("Your move: " + args[choice - 1]);
+                        break;
+                    }
+                }
+                else if(buff.Equals("?"))
+                {
+                    choice = -1;
+                    helpTableGenerator.GetHelpTable(args, rules);
+                }
+                else
+                {
+                    choice = -1;
+                    Console.WriteLine("Wrong move. Select one of the items from the menu");
+                }
+            }
+            if (choice - 1 > computerChoice)
+            {
+                Console.WriteLine("You win");
+            }
             Console.WriteLine("HMAC key: " + key);
         }
     }
@@ -77,18 +119,92 @@ namespace Task3
         }
     }
 
-    public class WinTableGenerator
+    public class WinResolver
     {
-
+        
     }
 
     public class Rules
     {
+        private static int[,] winTable;
 
+        public Rules(string[] args)
+        {
+            int[] res = new int[args.Length];
+            res[0] = 0;
+            winTable = new int[args.Length,args.Length];
+            for (int i = 1; i < args.Length; i++)
+            {
+                if( i < (args.Length - ((args.Length - 1)/2)))
+                {
+                    res[i] = -1;
+                } 
+                else
+                {
+                    res[i] = 1;
+                }
+            }
+            Console.WriteLine();
+            for (int i = 0; i < args.Length; i++)
+            {
+                for (int j = 0; j < args.Length; j++)
+                {
+                    winTable[i,j] = res[j];
+                }
+                int temp = res[args.Length - 1];
+                for (int k = args.Length - 2; k >= 0; k--)
+                {
+                    res[k + 1] = res[k];
+                }
+                res[0] = temp;
+            }
+        }
+
+        public int[,] GetTable()
+        {
+            return winTable;
+        }
     }
 
     public class HelpTableGenerator
     {
-
+        private string[,] helpTable;
+        public void GetHelpTable(string[] args, Rules rules)
+        {
+            int[,] table = rules.GetTable();
+            helpTable = new string[table.GetLength(1) + 1, table.GetLength(1) + 1];
+            helpTable[0, 0] = "  ";
+            for (int i = 1; i < helpTable.GetLength(1); i++)
+            {
+                helpTable[0, i] = args[i - 1];
+                helpTable[i, 0] = args[i - 1];
+            }
+            for (int i = 1; i < helpTable.GetLength(1); i++)
+            {
+                for (int j = 1; j < helpTable.GetLength(1); j++)
+                {
+                    if (table[i - 1, j - 1] == 0)
+                    {
+                        helpTable[i, j] = "Draw";
+                    }
+                    if (table[i - 1, j - 1] == -1)
+                    {
+                        helpTable[i, j] = "Lose";
+                    }
+                    if (table[i - 1, j - 1] == 1)
+                    {
+                        helpTable[i, j] = "Win";
+                    }
+                }
+            }
+            for (int i = 0; i < helpTable.GetLength(1); i++)
+            {
+                for (int j = 0; j < helpTable.GetLength(1); j++)
+                {
+                    Console.Write("{0,10} ", helpTable[i, j]);
+                }
+                Console.WriteLine();
+            }
+        }
     }
 }
