@@ -1,6 +1,7 @@
 ﻿using SHA3.Net;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
@@ -38,7 +39,6 @@ namespace Task3
                 }
             }
             Generator generator = new Generator();
-            WinResolver winResolver = new WinResolver();
             Rules rules = new Rules(args);
             HelpTableGenerator helpTableGenerator = new HelpTableGenerator();
             string key = generator.Generate().Replace("-", "");
@@ -47,7 +47,6 @@ namespace Task3
             int choice = -1;
             hmac = generator.GenerateHMAC(key, args[computerChoice]);
             Console.WriteLine("HMAC: " + hmac);
-            Console.WriteLine(args[computerChoice]);
             while (choice != 0)
             {
                 Console.WriteLine("Available moves:");
@@ -67,6 +66,7 @@ namespace Task3
                     else if(choice != 0)
                     {
                         Console.WriteLine("Your move: " + args[choice - 1]);
+                        Console.WriteLine("Computer move: " + args[computerChoice]);
                         break;
                     }
                 }
@@ -81,10 +81,7 @@ namespace Task3
                     Console.WriteLine("Wrong move. Select one of the items from the menu");
                 }
             }
-            if (choice - 1 > computerChoice)
-            {
-                Console.WriteLine("You win");
-            }
+            WinResolver.WhoWillWin(choice - 1, computerChoice, rules);
             Console.WriteLine("HMAC key: " + key);
         }
     }
@@ -119,9 +116,24 @@ namespace Task3
         }
     }
 
-    public class WinResolver
+    public static class WinResolver
     {
-        
+        public static void WhoWillWin(int you, int computer, Rules rules)
+        {
+            int[,] table = rules.GetTable();
+            if (table[you, computer] == 0)
+            {
+                Console.WriteLine("Draw");
+            }
+            if (table[computer, you] == 1)
+            {
+                Console.WriteLine("You win!");
+            }
+            if (table[computer, you] == -1)
+            {
+                Console.WriteLine("You lose!");
+            }
+        }
     }
 
     public class Rules
