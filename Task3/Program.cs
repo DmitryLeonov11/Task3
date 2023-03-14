@@ -81,7 +81,12 @@ namespace Task3
                     Console.WriteLine("Wrong move. Select one of the items from the menu");
                 }
             }
-            WinResolver.WhoWillWin(choice - 1, computerChoice, rules);
+
+            if (choice != 0)
+            {
+                WinResolver.WhoWillWin(choice - 1, computerChoice, rules);
+                Console.WriteLine("Your choice: exit");
+            }
             Console.WriteLine("HMAC key: " + key);
         }
     }
@@ -125,11 +130,11 @@ namespace Task3
             {
                 Console.WriteLine("Draw");
             }
-            if (table[computer, you] == 1)
+            if (table[you, computer] == 1)
             {
                 Console.WriteLine("You win!");
             }
-            if (table[computer, you] == -1)
+            if (table[you, computer] == -1)
             {
                 Console.WriteLine("You lose!");
             }
